@@ -1,0 +1,3 @@
+[submodule "external/@worldbrain/memex-common"]
+	path = external/@worldbrain/memex-common
+	url = git@github.com:WorldBrain/memex-common.git
