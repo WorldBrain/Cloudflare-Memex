@@ -8,6 +8,16 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
+import {
+    SHARED_LIST_TIMESTAMP_GET_ROUTE,
+    SHARED_LIST_TIMESTAMP_SET_ROUTE,
+} from './constants'
+import type {
+    SharedListTimestampSetRequest,
+    SharedListTimestampGetRequest,
+    SharedListTimestamp,
+} from './types'
+
 export interface Env {
     // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
     // MY_KV_NAMESPACE: KVNamespace;
@@ -17,6 +27,79 @@ export interface Env {
     //
     // Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
     // MY_BUCKET: R2Bucket;
+
+    ENVIRONMENT: 'production' | 'staging' | 'dev'
+    SHARED_LIST_ACTIVITY_TIMESTAMPS: KVNamespace
+}
+
+async function handleSettingTimestamps(
+    env: Env,
+    { sharedListTimestamps }: SharedListTimestampSetRequest,
+): Promise<Response> {
+    if (!sharedListTimestamps?.length) {
+        return new Response(
+            'Expected shared list timestamp tuples were not supplied.',
+            { status: 400 },
+        )
+    }
+
+    for (const tuple of sharedListTimestamps) {
+        if (
+            !Array.isArray(tuple) ||
+            tuple.length !== 2 ||
+            typeof tuple[0] !== 'string' ||
+            typeof tuple[1] !== 'number'
+        ) {
+            return new Response(
+                'Incorrectly typed shared list timestamp tuples were supplied.',
+                { status: 400 },
+            )
+        }
+    }
+
+    for (const [sharedList, timestamp] of sharedListTimestamps) {
+        await env.SHARED_LIST_ACTIVITY_TIMESTAMPS.put(
+            sharedList,
+            timestamp.toString(),
+        )
+    }
+
+    return new Response()
+}
+
+async function handleGettingTimestamps(
+    env: Env,
+    { sharedListIds }: SharedListTimestampGetRequest,
+): Promise<Response> {
+    if (!sharedListIds?.length || !Array.isArray(sharedListIds)) {
+        return new Response('Expected shared list IDs were not supplied.', {
+            status: 400,
+        })
+    }
+
+    for (const sharedListId of sharedListIds) {
+        if (typeof sharedListId !== 'string' || !sharedListId.length) {
+            return new Response(
+                'Incorrectly typed shared list IDs were supplied.',
+                { status: 400 },
+            )
+        }
+    }
+
+    const sharedListTimestamps: SharedListTimestamp[] = []
+
+    for (const sharedListId of sharedListIds) {
+        const timestampString = await env.SHARED_LIST_ACTIVITY_TIMESTAMPS.get(
+            sharedListId,
+        )
+        if (timestampString == null) {
+            continue
+        }
+        const timestampNumber = parseInt(timestampString)
+        sharedListTimestamps.push([sharedListId, timestampNumber])
+    }
+
+    return new Response(JSON.stringify(sharedListTimestamps))
 }
 
 export default {
@@ -25,6 +108,38 @@ export default {
         env: Env,
         ctx: ExecutionContext,
     ): Promise<Response> {
-        return new Response('Hello World!')
+        let response: Response
+        try {
+            const { pathname } = new URL(request.url)
+            if (
+                pathname === SHARED_LIST_TIMESTAMP_SET_ROUTE &&
+                request.method === 'POST'
+            ) {
+                const data = await request.json<SharedListTimestampSetRequest>()
+                response = await handleSettingTimestamps(env, data)
+            } else if (
+                pathname === SHARED_LIST_TIMESTAMP_GET_ROUTE &&
+                request.method === 'POST'
+            ) {
+                const data = await request.json<SharedListTimestampGetRequest>()
+                response = await handleGettingTimestamps(env, data)
+            } else {
+                response = new Response(
+                    'Request was made to a location unknown to the worker',
+                    { status: 410 },
+                )
+            }
+        } catch (err) {
+            let message = ''
+            if (err instanceof Error) {
+                message = err.message
+            }
+            response = new Response(
+                `Worker encountered an unknown error during processing:\n${message}`,
+                { status: 500 },
+            )
+        } finally {
+            return response!
+        }
     },
 }
