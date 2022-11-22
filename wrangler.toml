@@ -1,3 +1,21 @@
-name = "cloudflare-memex"
+name = "cloudflare-memex-dev"
 main = "src/index.ts"
 compatibility_date = "2022-11-22"
+account_id = "a0b1dba66816394c1b24cdfe05004bd2"
+vars = { ENVIRONMENT = "dev" }
+kv_namespaces = [
+    { binding = "SHARED_LIST_ACTIVITY_TIMESTAMPS", id = "93f5a1ea47924e77960ef28c4b0e80c9", preview_id = "681e352605cd4b6785c98d17dce2e4f9" }
+]
+
+[env.staging]
+name = "cloudflare-memex-staging"
+route = "staging.memex.workers.dev/*"
+vars = { ENVIRONMENT = "staging" }
+
+[env.production]
+name = "cloudfare-memex"
+route = "memex.workers.dev/*"
+vars = { ENVIRONMENT = "production" }
+kv_namespaces = [
+    { binding = "SHARED_LIST_ACTIVITY_TIMESTAMPS", id = "dadd3ed131f24a19812156d55170ceec" }
+]
