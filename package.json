@@ -11,7 +11,8 @@
         "test": "jest --verbose --silent --config=jest.config.js",
         "test:watch": "node --async-stack-traces node_modules/.bin/jest --watch --config=jest.config.js",
         "format": "prettier --config prettier.config.js --write '**/*.{ts,js,tsx,jsx,css}'",
-        "deploy": "wrangler publish"
+        "deploy:staging": "wrangler publish --env staging",
+        "deploy:prod": "wrangler publish --env production"
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20221111.1",
@@ -20,6 +21,6 @@
         "prettier": "^2.7.1",
         "ts-jest": "^29.0.3",
         "typescript": "^4.9.3",
-        "wrangler": "^2.4.2"
+        "wrangler": "2.4.4"
     }
 }

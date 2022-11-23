@@ -9,12 +9,13 @@ kv_namespaces = [
 
 [env.staging]
 name = "cloudflare-memex-staging"
-route = "staging.memex.workers.dev/*"
 vars = { ENVIRONMENT = "staging" }
+kv_namespaces = [
+    { binding = "SHARED_LIST_ACTIVITY_TIMESTAMPS", id = "93f5a1ea47924e77960ef28c4b0e80c9" }
+]
 
 [env.production]
 name = "cloudfare-memex"
-route = "memex.workers.dev/*"
 vars = { ENVIRONMENT = "production" }
 kv_namespaces = [
     { binding = "SHARED_LIST_ACTIVITY_TIMESTAMPS", id = "dadd3ed131f24a19812156d55170ceec" }
