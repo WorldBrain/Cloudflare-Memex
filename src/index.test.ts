@@ -11,10 +11,12 @@ interface TestContext {
 
 type TestRunner = (context: TestContext) => Promise<void>
 
+const testAuthCredentials = 'dGVzdDp0ZXN0'
+
 const setupTest = (test: TestRunner) => async () => {
     const worker = await unstable_dev(
         'src/index.ts',
-        {},
+        { env: 'dev' },
         { disableExperimentalWarning: true },
     )
     await test({ worker })
@@ -24,6 +26,7 @@ const setupTest = (test: TestRunner) => async () => {
 async function testSetRoute(
     worker: UnstableDevWorker,
     sharedListTimestamps: any,
+    authCredentials: string | null,
     expectedResponse: {
         ok: boolean
         text?: string
@@ -32,6 +35,10 @@ async function testSetRoute(
 ) {
     const response = await worker.fetch(SHARED_LIST_TIMESTAMP_SET_ROUTE, {
         method: 'POST',
+        headers:
+            authCredentials != null
+                ? { Authorization: `Basic ${authCredentials}` }
+                : undefined,
         body: JSON.stringify({ sharedListTimestamps }),
     })
     expect(response.ok).toBe(expectedResponse.ok)
@@ -85,10 +92,15 @@ describe('shared list activity timestamp worker tests', () => {
                 sharedListTimestamps: [],
             })
 
-            await testSetRoute(worker, [...sharedListTimestamps.entries()], {
-                ok: true,
-                status: 200,
-            })
+            await testSetRoute(
+                worker,
+                [...sharedListTimestamps.entries()],
+                testAuthCredentials,
+                {
+                    ok: true,
+                    status: 200,
+                },
+            )
 
             // TODO: Find a way to directly assert KV contents
             await testGetRoute(worker, [...sharedListTimestamps.keys()], {
@@ -99,10 +111,15 @@ describe('shared list activity timestamp worker tests', () => {
 
             sharedListTimestamps.set('test-b', now + 10)
             sharedListTimestamps.set('test-d', now + 100)
-            await testSetRoute(worker, [...sharedListTimestamps.entries()], {
-                ok: true,
-                status: 200,
-            })
+            await testSetRoute(
+                worker,
+                [...sharedListTimestamps.entries()],
+                testAuthCredentials,
+                {
+                    ok: true,
+                    status: 200,
+                },
+            )
 
             await testGetRoute(worker, [...sharedListTimestamps.keys()], {
                 ok: true,
@@ -113,17 +130,40 @@ describe('shared list activity timestamp worker tests', () => {
     )
 
     it(
+        'should reject non-authed attempts at setting shared list timestamps',
+        setupTest(async ({ worker }) => {
+            await testSetRoute(worker, [['test-a', 1]], null, {
+                ok: false,
+                status: 401,
+            })
+            await testSetRoute(worker, [['test-a', 1]], 'test', {
+                ok: false,
+                status: 401,
+            })
+            await testSetRoute(
+                worker,
+                [['test-a', 1]],
+                Buffer.from('test:not-the-password').toString('base64'),
+                {
+                    ok: false,
+                    status: 401,
+                },
+            )
+        }),
+    )
+
+    it(
         'should complain on incorrectly typed or missing data when setting shared list timestamps',
         setupTest(async ({ worker }) => {
-            await testSetRoute(worker, [], {
+            await testSetRoute(worker, [], testAuthCredentials, {
                 ok: false,
                 status: 400,
             })
-            await testSetRoute(worker, undefined, {
+            await testSetRoute(worker, undefined, testAuthCredentials, {
                 ok: false,
                 status: 400,
             })
-            await testSetRoute(worker, 'test-a', {
+            await testSetRoute(worker, 'test-a', testAuthCredentials, {
                 ok: false,
                 status: 400,
             })
@@ -133,20 +173,26 @@ describe('shared list activity timestamp worker tests', () => {
                     ['test-a', 123],
                     ['test-b', '199'],
                 ],
+                testAuthCredentials,
                 {
                     ok: false,
                     status: 400,
                 },
             )
-            await testSetRoute(worker, [['test-a', 123, 'test-b', '199']], {
+            await testSetRoute(
+                worker,
+                [['test-a', 123, 'test-b', '199']],
+                testAuthCredentials,
+                {
+                    ok: false,
+                    status: 400,
+                },
+            )
+            await testSetRoute(worker, [['test-a']], testAuthCredentials, {
                 ok: false,
                 status: 400,
             })
-            await testSetRoute(worker, [['test-a']], {
-                ok: false,
-                status: 400,
-            })
-            await testSetRoute(worker, [[123, 123]], {
+            await testSetRoute(worker, [[123, 123]], testAuthCredentials, {
                 ok: false,
                 status: 400,
             })

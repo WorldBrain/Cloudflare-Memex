@@ -2,7 +2,9 @@ name = "cloudflare-memex-dev"
 main = "src/index.ts"
 compatibility_date = "2022-11-22"
 account_id = "a0b1dba66816394c1b24cdfe05004bd2"
-vars = { ENVIRONMENT = "dev" }
+
+[env.dev]
+vars = { ENVIRONMENT = "dev", SECRET_CREDENTIALS = "dGVzdDp0ZXN0" }
 kv_namespaces = [
     { binding = "SHARED_LIST_ACTIVITY_TIMESTAMPS", id = "93f5a1ea47924e77960ef28c4b0e80c9", preview_id = "681e352605cd4b6785c98d17dce2e4f9" }
 ]
@@ -20,3 +22,6 @@ vars = { ENVIRONMENT = "production" }
 kv_namespaces = [
     { binding = "SHARED_LIST_ACTIVITY_TIMESTAMPS", id = "dadd3ed131f24a19812156d55170ceec" }
 ]
+
+# Necessary secrets:
+# - SECRET_CREDENTIALS - base64 encoded 'username:password' used to check against all incoming "/set_timestamp" basic auth request headers

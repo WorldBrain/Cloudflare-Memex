@@ -28,14 +28,29 @@ export interface Env {
     // Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
     // MY_BUCKET: R2Bucket;
 
+    SECRET_CREDENTIALS: string
     ENVIRONMENT: 'production' | 'staging' | 'dev'
     SHARED_LIST_ACTIVITY_TIMESTAMPS: KVNamespace
 }
 
 async function handleSettingTimestamps(
+    { headers }: Request,
     env: Env,
     { sharedListTimestamps }: SharedListTimestampSetRequest,
 ): Promise<Response> {
+    const authHeader = headers.get('Authorization')
+
+    if (
+        authHeader == null ||
+        authHeader.match(/^Basic (?<cred>\w+)$/)?.groups?.cred !==
+            env.SECRET_CREDENTIALS
+    ) {
+        return new Response(
+            'Required auth credentials not received in request.',
+            { status: 401 },
+        )
+    }
+
     if (!sharedListTimestamps?.length) {
         return new Response(
             'Expected shared list timestamp tuples were not supplied.',
@@ -68,6 +83,7 @@ async function handleSettingTimestamps(
 }
 
 async function handleGettingTimestamps(
+    request: Request,
     env: Env,
     { sharedListIds }: SharedListTimestampGetRequest,
 ): Promise<Response> {
@@ -116,13 +132,13 @@ export default {
                 request.method === 'POST'
             ) {
                 const data = await request.json<SharedListTimestampSetRequest>()
-                response = await handleSettingTimestamps(env, data)
+                response = await handleSettingTimestamps(request, env, data)
             } else if (
                 pathname === SHARED_LIST_TIMESTAMP_GET_ROUTE &&
                 request.method === 'POST'
             ) {
                 const data = await request.json<SharedListTimestampGetRequest>()
-                response = await handleGettingTimestamps(env, data)
+                response = await handleGettingTimestamps(request, env, data)
             } else {
                 response = new Response(
                     'Request was made to a location unknown to the worker',

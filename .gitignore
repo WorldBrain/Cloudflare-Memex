@@ -1,3 +1,7 @@
+secrets/
+
+### Below is generated via GH
+
 # Logs
 logs
 *.log
