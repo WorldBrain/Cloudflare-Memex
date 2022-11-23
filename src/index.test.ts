@@ -2,8 +2,8 @@ import { unstable_dev, UnstableDevWorker } from 'wrangler'
 import {
     SHARED_LIST_TIMESTAMP_GET_ROUTE,
     SHARED_LIST_TIMESTAMP_SET_ROUTE,
-} from './constants'
-import type { SharedListTimestamp } from './types'
+} from '../external/@worldbrain/memex-common/ts/page-activity-indicator/backend/constants'
+import type { SharedListTimestamp } from '../external/@worldbrain/memex-common/ts/page-activity-indicator/backend/types'
 
 interface TestContext {
     worker: UnstableDevWorker

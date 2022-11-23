@@ -9,7 +9,13 @@ module.exports = {
             },
         ],
     },
+    rootDir: '.',
     moduleNameMapper: {
+        // TODO: get these submodule paths working...
+        //     '^@worldbrain/memex-common$':
+        //         '<rootdir>/external/@worldbrain/memex-common/ts',
+        //     '^@worldbrain/memex-common/lib/(.*)':
+        //         '<rootdir>/external/@worldbrain/memex-common/ts/$1',
         '^@/(.*)$': '<rootDir>/src/$1',
         '^(\\.{1,2}/.*)\\.js$': '$1',
     },

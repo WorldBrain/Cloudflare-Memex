@@ -11,12 +11,12 @@
 import {
     SHARED_LIST_TIMESTAMP_GET_ROUTE,
     SHARED_LIST_TIMESTAMP_SET_ROUTE,
-} from './constants'
+} from '../external/@worldbrain/memex-common/ts/page-activity-indicator/backend/constants'
 import type {
     SharedListTimestampSetRequest,
     SharedListTimestampGetRequest,
     SharedListTimestamp,
-} from './types'
+} from '../external/@worldbrain/memex-common/ts/page-activity-indicator/backend/types'
 
 export interface Env {
     // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
