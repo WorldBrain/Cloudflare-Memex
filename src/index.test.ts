@@ -11,7 +11,7 @@ interface TestContext {
 
 type TestRunner = (context: TestContext) => Promise<void>
 
-const testAuthCredentials = 'dGVzdDp0ZXN0'
+const testAuthCredentials = 'dGVzdDp0ZXN0='
 
 const setupTest = (test: TestRunner) => async () => {
     const worker = await unstable_dev(

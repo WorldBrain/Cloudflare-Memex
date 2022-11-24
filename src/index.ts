@@ -42,8 +42,7 @@ async function handleSettingTimestamps(
 
     if (
         authHeader == null ||
-        authHeader.match(/^Basic (?<cred>\w+)$/)?.groups?.cred !==
-            env.SECRET_CREDENTIALS
+        authHeader.match(/^Basic (.+)$/)?.[1] !== env.SECRET_CREDENTIALS
     ) {
         return new Response(
             'Required auth credentials not received in request.',

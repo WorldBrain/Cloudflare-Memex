@@ -1,4 +1,5 @@
 module.exports = {
+    testMatch: ['<rootDir>/src/**/*.test.(js|jsx|ts|tsx)'],
     preset: 'ts-jest/presets/default-esm',
     transform: {
         '\\.ts$': [
